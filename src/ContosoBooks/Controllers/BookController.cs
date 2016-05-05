@@ -8,13 +8,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ContosoBooks.Common;
 using Microsoft.Extensions.Caching.Memory;
 
 //using Microsoft.Extensions.Logging;
 
 namespace ContosoBooks.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     public class BookController : Controller
     {
         [FromServices]
@@ -26,9 +27,21 @@ namespace ContosoBooks.Controllers
             this._cache = cache;
         }
 
+        [HttpGet("Index")]
+       // [Cacheable(_cache)]
+        public IActionResult Index()
+        {
+            return View(GetBooks());
+        }
 
         [HttpGet]
-        public IActionResult Index()
+        public IActionResult Get()
+        {
+            
+            return new ObjectResult(GetBooks());
+        }
+
+        public List<Book> GetBooks()
         {
             var books = new List<Book>();
             if (!_cache.TryGetValue("books", out books))
@@ -37,7 +50,7 @@ namespace ContosoBooks.Controllers
                 this._cache.Set("books", books, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(.25) });
             }
 
-            return new ObjectResult(books);
+            return books;
         }
 
         public async Task<ActionResult> Details(int id)
