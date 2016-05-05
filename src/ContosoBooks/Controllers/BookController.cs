@@ -11,8 +11,6 @@ using System.Threading.Tasks;
 using ContosoBooks.Common;
 using Microsoft.Extensions.Caching.Memory;
 
-//using Microsoft.Extensions.Logging;
-
 namespace ContosoBooks.Controllers
 {
     [Route("[controller]")]
@@ -20,37 +18,25 @@ namespace ContosoBooks.Controllers
     {
         [FromServices]
         public BookContext BookContext { get; set; }
-        private IMemoryCache _cache;
-
-        public BookController(IMemoryCache cache)
-        {
-            this._cache = cache;
-        }
+       
 
         [HttpGet("Index")]
-       // [Cacheable(_cache)]
+        [Cacheable(.25)]
         public IActionResult Index()
         {
             return View(GetBooks());
         }
 
         [HttpGet]
+        [Cacheable(.25)]
         public IActionResult Get()
         {
-            
             return new ObjectResult(GetBooks());
         }
 
         public List<Book> GetBooks()
         {
-            var books = new List<Book>();
-            if (!_cache.TryGetValue("books", out books))
-            {
-                books = BookContext.Books.Include(b => b.Author).ToList();
-                this._cache.Set("books", books, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(.25) });
-            }
-
-            return books;
+            return BookContext.Books.Include(b => b.Author).ToList();
         }
 
         public async Task<ActionResult> Details(int id)

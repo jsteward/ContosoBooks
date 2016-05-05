@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
 using Microsoft.AspNet.Mvc.Filters;
 using Microsoft.Extensions.Caching.Memory;
@@ -11,17 +8,22 @@ namespace ContosoBooks.Common
     [AttributeUsage(AttributeTargets.Method)]
     public class CacheableAttribute : ActionFilterAttribute
     {
-        public string CacheKey { get; set; }
-        public IMemoryCache _cache { get; set; }
+        private string CacheKey { get; set; }
+        private IMemoryCache _cache { get; set; }
 
-        public CacheableAttribute(IMemoryCache cache)
+        private double _serverExpiration { get; set; }
+
+        public CacheableAttribute(double ServerExpiration)
         {
-            _cache = cache;
+            _serverExpiration = ServerExpiration;
+            _cache = new MemoryCache(new MemoryCacheOptions());
         }
+
+
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-           // context.HttpContext.
-            var result = context.Result;
+           
+            IActionResult result;
             CacheKey = "ResultCache-" + context.HttpContext.Request.Method;
 
             if (_cache.TryGetValue(CacheKey, out result))
@@ -35,18 +37,11 @@ namespace ContosoBooks.Common
         public override void OnActionExecuted(ActionExecutedContext context)
         {
             CacheKey = "ResultCache-" + context.HttpContext.Request.Method;
-
-            _cache.Set(CacheKey, context.Result);
-
-            //Add a value in order to know the last time it was cached.
-            //context.Controller..ViewData["CachedStamp"] = DateTime.Now;
-
+            _cache.Set(CacheKey, context.Result,
+                new MemoryCacheEntryOptions {AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(_serverExpiration) });
             base.OnActionExecuted(context);
         }
     }
 
-    //public class BookCacher
-    //{
-
-    //}
+   
 }
