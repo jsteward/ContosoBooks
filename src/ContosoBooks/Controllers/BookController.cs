@@ -21,14 +21,15 @@ namespace ContosoBooks.Controllers
        
 
         [HttpGet("Index")]
-        [Cacheable(.25)]
+        [Cacheable(10, 15)]
         public IActionResult Index()
         {
             return View(GetBooks());
         }
 
         [HttpGet]
-        [Cacheable(.25)]
+        [Cacheable(10, 15)]
+        
         public IActionResult Get()
         {
             return new ObjectResult(GetBooks());
@@ -60,9 +61,7 @@ namespace ContosoBooks.Controllers
 
         private IEnumerable<SelectListItem> GetAuthorsListItems(int selected = -1)
         {
-            var tmp = BookContext.Authors.ToList();  // Workaround for https://github.com/aspnet/EntityFramework/issues/2246
-
-            // Create authors list for <select> dropdown
+            var tmp = BookContext.Authors.ToList();  
             return tmp
                 .OrderBy(author => author.LastName)
                 .Select(author => new SelectListItem
